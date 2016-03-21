@@ -34,8 +34,15 @@ public class FestivityController {
 	IFestivity fest;
 	@Autowired
 	private MessageSource messageSource;
+	
 	private static final Logger logger = LoggerFactory.getLogger(FestivityController.class);
 
+	/**
+	 * Create Festivity
+	 * @param festivity
+	 * @return Festivity
+	 * @throws Exception
+	 */
 	@RequestMapping(value = "/festivity/create", method = RequestMethod.POST, produces = {
 			MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	@ResponseStatus(HttpStatus.CREATED)
