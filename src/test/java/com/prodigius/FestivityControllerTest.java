@@ -42,6 +42,10 @@ public class FestivityControllerTest {
 	private static final String GET_BY_ID = "/festivity/{id}";
 	private static final String CREATE = "/festivity/create";
 	private static final String UPDATE = "/festivity/{id}";
+	private static final String GET_BY_NAME= "/festivity/filter/name";
+	private static final String GET_BY_DATE_RANGE= "/festivity/filter/startDateRange";
+	private static final String GET_BY_PLACE= "/festivity/filter/place";
+	
 
 	// VARIABLES
 	private static final String NAME = "UnitTest";
@@ -102,7 +106,7 @@ public class FestivityControllerTest {
 	}
 
 	// GET ALL
-
+	 
 	@Test
 	public void getAllAsJason() {
 		createUserA();
@@ -377,6 +381,193 @@ public class FestivityControllerTest {
 		DateTime dateEndtUTC = new DateTime(tmp.getEndDate(), DateTimeZone.UTC);
 		Assert.assertEquals(dateStartUTC, dateStartUTCToUpdate);
 		Assert.assertEquals(dateEndtUTC, dateEndtUTCToUpdate);
-	}
+	} 
+	
+	@Test
+	public void updateFestivityWithXML() {
+		createUserA();		
+		RestAssured
+		.given()
+			.accept("application/xml")
+			.contentType(ContentType.XML)
+			.body("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><festivity><endDate>" + UPD_END_DATE
+					+ "</endDate><name>" + UPD_NAME + "</name><place>" + UPD_PLACE + "</place><startDate>" + UPD_START_DATE
+					+ "</startDate></festivity>")			
+		.when()
+			.put(UPDATE, festivityA.getId())
+		.then()
+			.statusCode(HttpStatus.SC_OK)
+			.contentType(ContentType.XML)
+			.body("festivity.name", equalTo(UPD_NAME));
 
+		Festivity tmp = repository.findOne(festivityA.getId());
+		Assert.assertEquals(tmp.getName(), UPD_NAME);
+		Assert.assertEquals(tmp.getPlace(), PLACE);
+
+		DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd");
+
+		DateTime dateStartUTCToUpdate = new DateTime(formatter.parseDateTime(UPD_START_DATE), DateTimeZone.UTC);
+		DateTime dateStartUTC = new DateTime(tmp.getStartDate(), DateTimeZone.UTC);
+		Assert.assertEquals(dateStartUTC, dateStartUTCToUpdate);
+
+		DateTime dateEndtUTCToUpdate = new DateTime(formatter.parseDateTime(UPD_END_DATE), DateTimeZone.UTC);
+		DateTime dateEndtUTC = new DateTime(tmp.getEndDate(), DateTimeZone.UTC);
+		Assert.assertEquals(dateStartUTC, dateStartUTCToUpdate);
+		Assert.assertEquals(dateEndtUTC, dateEndtUTCToUpdate);
+	} 
+	
+	@Test
+	public void tryToUpdateFestivityWithStartDateGreaterThatEndDateInXMLFormat() {
+		createUserA();
+		String respMessage = messageSource.getMessage("error.exception", null, LocaleContextHolder.getLocale())
+				+ messageSource.getMessage("rest.rule.invalid.date", null, LocaleContextHolder.getLocale());		
+		RestAssured
+		.given()
+			.accept("application/xml")
+			.contentType(ContentType.XML)
+			.body("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><festivity><endDate>" + UPD_START_DATE
+					+ "</endDate><name>" + UPD_NAME + "</name><place>" + UPD_PLACE + "</place><startDate>" + UPD_END_DATE
+					+ "</startDate></festivity>")			
+		.when()
+			.put(UPDATE, festivityA.getId())
+		.then()
+			.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+			.contentType(ContentType.XML)				
+			.body("errorInfo.message", equalTo(respMessage));
+	} 
+
+	@Test
+	public void tryToUpdateFestivityWithStartDateGreaterThatEndDateInJsonFormat() {
+		createUserA();
+		String respMessage = messageSource.getMessage("error.exception", null, LocaleContextHolder.getLocale())
+				+ messageSource.getMessage("rest.rule.invalid.date", null, LocaleContextHolder.getLocale());		
+		RestAssured
+		.given()
+			.accept("application/json")
+			.contentType(ContentType.JSON)
+			.body("{\"name\": \"" + UPD_NAME + "\",\"startDate\": \"" + UPD_END_DATE + "\",\"endDate\": \""
+					+ UPD_START_DATE + "\",\"place\": \"" + UPD_PLACE + "\"}")
+		.when()
+			.put(UPDATE, festivityA.getId())
+		.then()
+			.statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+			.contentType(ContentType.JSON)				
+			.body("message", equalTo(respMessage));
+	} 
+
+	//Specific Queries
+	
+	@Test
+	public void getByNameAsJson() {
+		createUserA();
+		createUserB();
+		createUserB();
+		RestAssured
+		.given()
+			.accept("application/json")
+			.param("name", NAME_B)
+		.when()
+			.get(GET_BY_NAME)
+		.then()
+			.statusCode(HttpStatus.SC_OK)
+			.contentType(ContentType.JSON)
+			.body("festivities.name", hasSize(equalTo(2)))
+			;
+	}
+	
+	@Test
+	public void getByNameAsXML() {
+		createUserA();
+		createUserB();
+		createUserB();
+		RestAssured
+		.given()
+			.accept("application/xml")
+			.param("name", NAME_B)
+		.when()
+			.get(GET_BY_NAME)
+		.then()
+			.statusCode(HttpStatus.SC_OK)
+			.contentType(ContentType.XML)
+			.body("festivityList.festivities.name", hasItems(NAME_B, NAME_B))
+			 ;
+	}
+	
+	
+	@Test
+	public void getByPlaceAsJson() {
+		createUserA();
+		createUserB();
+		createUserB();
+		RestAssured
+		.given()
+			.accept("application/json")
+			.param("place", PLACE_B)
+		.when()
+			.get(GET_BY_PLACE)
+		.then()
+			.statusCode(HttpStatus.SC_OK)
+			.contentType(ContentType.JSON)
+			.body("festivities.name", hasSize(equalTo(2)))
+			;
+	}
+	
+	@Test
+	public void getByPlaceAsXML() {
+		createUserA();
+		createUserB();
+		createUserB();
+		RestAssured
+		.given()
+			.accept("application/xml")
+			.param("place", PLACE_B)
+		.when()
+			.get(GET_BY_PLACE)
+		.then()
+			.statusCode(HttpStatus.SC_OK)
+			.contentType(ContentType.XML)
+			.body("festivityList.festivities.name", hasItems(NAME_B, NAME_B))
+			 ;
+	}
+	
+	
+	@Test
+	public void getByDateRangeAsJson() {
+		createUserA();
+		createUserB();
+		createUserB();
+		RestAssured
+		.given()
+			.accept("application/json")
+			.param("startDateIni", "2015-01-05")
+			.param("startDateEnd", "2015-01-07")
+		.when()
+			.get(GET_BY_DATE_RANGE)
+		.then()
+			.statusCode(HttpStatus.SC_OK)
+			.contentType(ContentType.JSON)
+			.body("festivities.name", hasSize(equalTo(2)))
+			;
+	}
+	
+	
+	@Test
+	public void getByDateRangeAsXML() {
+		createUserA();
+		createUserB();
+		createUserB();
+		RestAssured
+		.given()
+			.accept("application/xml")
+			.param("startDateIni", "2015-01-05")
+			.param("startDateEnd", "2015-01-07")
+		.when()
+			.get(GET_BY_DATE_RANGE)
+		.then()
+			.statusCode(HttpStatus.SC_OK)
+			.contentType(ContentType.XML)
+			.body("festivityList.festivities.name", hasItems(NAME_B, NAME_B))
+			 ;
+	}
+	
 }

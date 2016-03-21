@@ -3,6 +3,8 @@ package com.prodigius.error;
 import javax.persistence.NoResultException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -19,7 +21,7 @@ public class ExceptionHandlingController {
 	@Autowired
 	private MessageSource messageSource;
 
-//	private static final Logger logger = LoggerFactory.getLogger(ExceptionHandlingController.class);
+	private static final Logger logger = LoggerFactory.getLogger(ExceptionHandlingController.class);
 
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -29,6 +31,7 @@ public class ExceptionHandlingController {
 		response.setUrl(request.getRequestURL().toString());
 		response.setMessage(
 				messageSource.getMessage("error.exception", null, LocaleContextHolder.getLocale()) + ex.getMessage());
+		logger.error(response.getMessage());
 		return response;
 	}
 
@@ -41,6 +44,7 @@ public class ExceptionHandlingController {
 		response.setUrl(request.getRequestURL().toString());
 		response.setMessage(messageSource.getMessage("error.illegal.exeption", null, LocaleContextHolder.getLocale())
 				+ ex.getMessage());
+		logger.error(response.getMessage());
 		return response;
 	}
 
@@ -52,6 +56,7 @@ public class ExceptionHandlingController {
 		response.setUrl(request.getRequestURL().toString());
 		response.setMessage(messageSource.getMessage("error.no.result.exception", null, LocaleContextHolder.getLocale())
 				+ ex.getMessage());
+		logger.error(response.getMessage());
 		return response;
 	}
 
@@ -65,6 +70,7 @@ public class ExceptionHandlingController {
 		response.setMessage(
 				messageSource.getMessage("error.empty.result.exception", null, LocaleContextHolder.getLocale())
 						+ ex.getMessage());
+		logger.error(response.getMessage());
 		return response;
 	}
 
