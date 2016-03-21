@@ -73,7 +73,7 @@ public class FestivityController {
 	public Festivity getFestivity(@PathVariable Long id) {
 		Festivity f = fest.findOne(id);
 		if (f == null) {
-			logger.error("[NO RESULTS FOUND][READ BY ID="+id+"]");
+			logger.error("[NO RESULTS FOUND][READ BY ID="+id+"] ");
 			throw new NoResultException(
 					messageSource.getMessage("rest.no.data.found", null, LocaleContextHolder.getLocale()));
 		}
