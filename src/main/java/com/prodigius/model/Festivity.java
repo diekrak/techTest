@@ -8,6 +8,8 @@ import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModelProperty;
+
 @XmlRootElement
 @Entity
 public class Festivity {
@@ -24,8 +26,7 @@ public class Festivity {
 	private Date endDate;
 	@NotNull
 	private String place;
-	
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -34,6 +35,7 @@ public class Festivity {
 		this.id = id;
 	}
 
+	@ApiModelProperty(notes = "The name of the Festivity", required = true)
 	public String getName() {
 		return name;
 	}
@@ -42,6 +44,7 @@ public class Festivity {
 		this.name = name;
 	}
 
+	@ApiModelProperty(notes = "The start date of the Festivity", required = true)
 	public Date getStartDate() {
 		return startDate;
 	}
@@ -49,7 +52,8 @@ public class Festivity {
 	public void setStartDate(Date startDate) {
 		this.startDate = startDate;
 	}
-
+	
+	@ApiModelProperty(notes = "The start end of the Festivity", required = true)
 	public Date getEndDate() {
 		return endDate;
 	}
@@ -58,6 +62,7 @@ public class Festivity {
 		this.endDate = endDate;
 	}
 
+	@ApiModelProperty(notes = "The place of the Festivity", required = true)
 	public String getPlace() {
 		return place;
 	}

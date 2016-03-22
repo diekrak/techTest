@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -28,26 +29,44 @@ import com.prodigius.model.Festivity;
 import com.prodigius.persitence.IFestivity;
 import com.prodigius.util.FestivityList;
 
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 @RestController
 public class FestivityController {
 	@Autowired
 	IFestivity fest;
 	@Autowired
 	private MessageSource messageSource;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(FestivityController.class);
 
-	/**
-	 * Create Festivity
-	 * @param festivity
-	 * @return Festivity
-	 * @throws Exception
-	 */
+
+	@ApiOperation(value = "createFestivity")
+	@ApiResponses(value = { @ApiResponse(code = 201, message = "Success", response = Festivity.class),
+			@ApiResponse(code = 500, message = "Invalid data or unknown error") ,
+			@ApiResponse(code = 400, message = "Missing Parameters") })
 	@RequestMapping(value = "/festivity/create", method = RequestMethod.POST, produces = {
 			MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	@ResponseStatus(HttpStatus.CREATED)
 	public Festivity create(@RequestBody Festivity festivity) throws Exception {
-
+		if (festivity.getPlace() == null) {			
+			throw new ConstraintViolationException(messageSource.getMessage("missing.place", null, LocaleContextHolder.getLocale()), null, null);
+		}
+		if (festivity.getName() == null) {
+			throw new ConstraintViolationException(messageSource.getMessage("missing.name", null, LocaleContextHolder.getLocale()), null, null);
+		}
+		if (festivity.getStartDate() == null) {			
+			throw new ConstraintViolationException(messageSource.getMessage("missing.start.date", null, LocaleContextHolder.getLocale()), null, null);
+		}
+		if (festivity.getEndDate()== null) {
+			System.out.println("ERRPR");
+			throw new ConstraintViolationException(messageSource.getMessage("missing.end.date", null, LocaleContextHolder.getLocale()), null, null);
+		}
+		
 		if (Rule.areDatesValid(festivity.getStartDate(), festivity.getEndDate())) {
 			fest.save(festivity);
 		} else {
@@ -57,6 +76,7 @@ public class FestivityController {
 		return festivity;
 	}
 
+	
 	@RequestMapping(value = "/festivity/{id}", method = RequestMethod.PUT, produces = { MediaType.APPLICATION_XML_VALUE,
 			MediaType.APPLICATION_JSON_VALUE })
 	@ResponseStatus(HttpStatus.OK)
@@ -80,7 +100,7 @@ public class FestivityController {
 	public Festivity getFestivity(@PathVariable Long id) {
 		Festivity f = fest.findOne(id);
 		if (f == null) {
-			logger.error("[NO RESULTS FOUND][READ BY ID="+id+"] ");
+			logger.error("[NO RESULTS FOUND][READ BY ID=" + id + "] ");
 			throw new NoResultException(
 					messageSource.getMessage("rest.no.data.found", null, LocaleContextHolder.getLocale()));
 		}
@@ -91,7 +111,7 @@ public class FestivityController {
 			MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public FestivityList getAll() {		
+	public FestivityList getAll() {
 		FestivityList festListResp = new FestivityList();
 		List<Festivity> aux = (List<Festivity>) fest.findAll();
 		if (aux.isEmpty()) {
@@ -103,6 +123,12 @@ public class FestivityController {
 		return festListResp;
 	}
 
+	@ApiOperation(value = "Find Festivity By Name")	
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "name", value = "Name of the festivity", required = true, dataType = "string", paramType = "query") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success", response = Festivity.class),
+			@ApiResponse(code = 500, message = "Invalid data or unknown error"),
+			@ApiResponse(code = 404, message = "No data found")})
 	@RequestMapping(value = "/festivity/filter/name", method = RequestMethod.GET, produces = {
 			MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	@ResponseStatus(HttpStatus.OK)
@@ -110,7 +136,7 @@ public class FestivityController {
 		FestivityList festListResp = new FestivityList();
 		List<Festivity> aux = fest.findByName(name);
 		if (aux == null) {
-			logger.error("[NO RESULTS FOUND][READ BY NAME="+name+"]");
+			logger.error("[NO RESULTS FOUND][READ BY NAME=" + name + "]");
 			throw new NoResultException(
 					messageSource.getMessage("rest.no.data.found", null, LocaleContextHolder.getLocale()));
 		}
@@ -118,6 +144,13 @@ public class FestivityController {
 		return festListResp;
 	}
 
+	@ApiOperation(value = "Find festivities by start date")	
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "startDateIni", value = "Initial date to filter", required = true, dataType = "Date(YYYY-MM-DD)", paramType = "query"),
+			@ApiImplicitParam(name = "startDateEnd", value = "Final date to filter", required = true, dataType = "Date(YYYY-MM-DD)", paramType= "query")})
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success", response = Festivity.class),
+			@ApiResponse(code = 500, message = "Invalid data or unknown error"),
+			@ApiResponse(code = 404, message = "No data found")})
 	@RequestMapping(value = "/festivity/filter/startDateRange", method = RequestMethod.GET, produces = {
 			MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	@ResponseStatus(HttpStatus.OK)
@@ -129,7 +162,7 @@ public class FestivityController {
 		FestivityList festListResp = new FestivityList();
 		List<Festivity> aux = fest.findByStartDateBetween(dateStartA.toDate(), dateStartB.toDate());
 		if (aux == null) {
-			logger.error("[NO RESULTS FOUND][READ BY DATE RANGE="+startDateIni+"-"+startDateEnd+"]");
+			logger.error("[NO RESULTS FOUND][READ BY DATE RANGE=" + startDateIni + "-" + startDateEnd + "]");
 			throw new NoResultException(
 					messageSource.getMessage("rest.no.data.found", null, LocaleContextHolder.getLocale()));
 		}
@@ -137,6 +170,12 @@ public class FestivityController {
 		return festListResp;
 	}
 
+	@ApiOperation(value = "Find Festivity By Place")	
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "place", value = "Place of the festivity", required = true, dataType = "string", paramType = "query") })
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Success", response = Festivity.class),
+			@ApiResponse(code = 500, message = "Invalid data or unknown error"),
+			@ApiResponse(code = 404, message = "No data found")})
 	@RequestMapping(value = "/festivity/filter/place", method = RequestMethod.GET, produces = {
 			MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	@ResponseStatus(HttpStatus.OK)
@@ -144,7 +183,7 @@ public class FestivityController {
 		FestivityList festListResp = new FestivityList();
 		List<Festivity> aux = fest.findByPlace(place);
 		if (aux == null) {
-			logger.error("[NO RESULTS FOUND][READ BY PLACE="+place+"]");
+			logger.error("[NO RESULTS FOUND][READ BY PLACE=" + place + "]");
 			throw new NoResultException(
 					messageSource.getMessage("rest.no.data.found", null, LocaleContextHolder.getLocale()));
 		}

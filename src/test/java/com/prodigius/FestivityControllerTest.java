@@ -348,7 +348,79 @@ public class FestivityControllerTest {
 							
 			.body("errorInfo.message", equalTo(respMessage));
 	}
+	
+	
+	@Test
+	public void tryToCreateFestivityWithMissingPlaceParamInJson() {
 
+		RestAssured
+		.given()
+			.accept("application/json")
+			.contentType(ContentType.JSON)				
+			.body("{\"name\": \"" + NAME + "\",\"startDate\": \"" + START_DATE + "\",\"endDate\": \"" + END_DATE
+									+ "\"}")				
+		.when()
+			.post(CREATE)
+		.then()
+			.statusCode(HttpStatus.SC_BAD_REQUEST)
+			.contentType(ContentType.JSON)		
+			;		
+	}
+
+
+	@Test
+	public void tryToCreateFestivityWithMissingNameParamInJson() {
+
+		RestAssured
+		.given()
+			.accept("application/json")
+			.contentType(ContentType.JSON)				
+			.body("{\"startDate\": \"" + START_DATE + "\",\"endDate\": \"" + END_DATE
+									+ "\",\"place\": \"" + PLACE + "\"}")				
+		.when()
+			.post(CREATE)
+		.then()
+			.statusCode(HttpStatus.SC_BAD_REQUEST)
+			.contentType(ContentType.JSON)		
+			;		
+	}
+
+
+	@Test
+	public void tryToCreateFestivityWithMissingStartDateParamInJson() {
+
+		RestAssured
+		.given()
+			.accept("application/json")
+			.contentType(ContentType.JSON)				
+			.body("{\"name\": \"" + NAME + "\",\"endDate\": \"" + END_DATE
+									+ "\",\"place\": \"" + PLACE + "\"}")				
+		.when()
+			.post(CREATE)
+		.then()
+			.statusCode(HttpStatus.SC_BAD_REQUEST)
+			.contentType(ContentType.JSON)		
+			;		
+	}
+
+
+	@Test
+	public void tryToCreateFestivityWithMissingEndDateParamInJson() {
+
+		RestAssured
+		.given()
+			.accept("application/json")
+			.contentType(ContentType.JSON)				
+			.body("{\"name\": \"" + NAME + "\",\"startDate\": \"" + START_DATE + "\",\"place\": \"" + PLACE + "\"}")				
+		.when()
+			.post(CREATE)
+		.then()
+			.statusCode(HttpStatus.SC_BAD_REQUEST)
+			.contentType(ContentType.JSON)		
+			;		
+	}
+
+	
 	// UPDATE
 
 	@Test

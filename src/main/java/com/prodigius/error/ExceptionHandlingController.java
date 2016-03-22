@@ -3,6 +3,7 @@ package com.prodigius.error;
 import javax.persistence.NoResultException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ public class ExceptionHandlingController {
 	@ResponseBody
 	public ErrorInfo exceptionHandler(Exception ex, HttpServletRequest request) {
 		ErrorInfo response = new ErrorInfo();
+		ex.printStackTrace();
 		response.setUrl(request.getRequestURL().toString());
 		response.setMessage(
 				messageSource.getMessage("error.exception", null, LocaleContextHolder.getLocale()) + ex.getMessage());
@@ -64,11 +66,23 @@ public class ExceptionHandlingController {
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	@ResponseBody
 	public ErrorInfo emptyException(EmptyResultDataAccessException ex, HttpServletRequest request) {
-
 		ErrorInfo response = new ErrorInfo();
 		response.setUrl(request.getRequestURL().toString());
 		response.setMessage(
 				messageSource.getMessage("error.empty.result.exception", null, LocaleContextHolder.getLocale())
+						+ ex.getMessage());
+		logger.error(response.getMessage());
+		return response;
+	}
+	
+	@ExceptionHandler(ConstraintViolationException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	public ErrorInfo constrainException(ConstraintViolationException ex, HttpServletRequest request) {
+		ErrorInfo response = new ErrorInfo();
+		response.setUrl(request.getRequestURL().toString());
+		response.setMessage(
+				messageSource.getMessage("error.constrain.exception", null, LocaleContextHolder.getLocale())
 						+ ex.getMessage());
 		logger.error(response.getMessage());
 		return response;
