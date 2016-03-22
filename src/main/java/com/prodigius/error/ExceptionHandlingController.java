@@ -29,7 +29,6 @@ public class ExceptionHandlingController {
 	@ResponseBody
 	public ErrorInfo exceptionHandler(Exception ex, HttpServletRequest request) {
 		ErrorInfo response = new ErrorInfo();
-		ex.printStackTrace();
 		response.setUrl(request.getRequestURL().toString());
 		response.setMessage(
 				messageSource.getMessage("error.exception", null, LocaleContextHolder.getLocale()) + ex.getMessage());
